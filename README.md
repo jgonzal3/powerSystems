@@ -1,5 +1,5 @@
 # powerSystems
-# Power System Optimization Code Repository
+# Power System Optimisation Code Repository
 
 ## Overview
 
@@ -49,7 +49,7 @@ This repository is licensed under the MIT License. Please see the LICENSE file f
 
 ## Contact
 
-For any questions or feedback, please contact [yourname@example.com].
+For any questions or feedback, please contact [julio.gonzalez@ymail.com].
 
 ---
 
