@@ -9,13 +9,6 @@ from Algo_GS import process_data_file
 def equation_old(vars):
     # Split the real and imaginary parts
     Y = get_admitance()
-    #Y = np.array([
-    #[5.7241 - 12.3103j, -1.7241 + 4.3103j,   0.     +0.j,     -4.     +8.j    ],
-    #[-1.7241 + 4.3103j,  4.2241 - 11.8103j, -2.5    +7.5j,     0.     +0.j    ],
-    #[ 0.     +0.j,     -2.5    +7.5j,     4.3868 - 14.1038j, -1.8868 + 6.6038j],
-    #[-4.     +8.j,      0.     +0.j,     -1.8868 +6.6038j,  5.8868-14.6038j]
-    #              ])
-
     power_matrix = process_data_file('data.txt')
     V2_real, V2_imag, V3_real, V3_imag, V4_real, V4_imag = vars
     V2 = V2_real + 1j * V2_imag
