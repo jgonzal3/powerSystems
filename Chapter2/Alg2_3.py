@@ -41,7 +41,7 @@ def equations(vars):
     for i in range(1, n):  # Skip the slack bus (V1)
         Vi = voltages[i]
         power = power_matrix[i]  # Power at bus i (adjust index for 0-based)
-        equation = np.conj(Vi) * sum(Y[i][j] * voltages[j] for j in range(n)) - power
+        equation = np.conj(Vi) * sum(Y[i][j] * voltages[j] for j in range(n)) - np.conj(power)
         equations.append(equation.real)  # Real part
         equations.append(equation.imag)
     return np.array(equations).reshape(-1)
