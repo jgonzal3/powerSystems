@@ -1,8 +1,5 @@
 import numpy as np
 import math
-
-from pandas.compat import PY310
-
 from Algorithm2_1 import get_admitance
 import pandas as pd
 
