@@ -1,3 +1,5 @@
+# This problem is from the book Power System Engineering, 3rd Edition
+# by D.P. Kothari. The theory is based on Chapter 6. The data is from the same book according to example 6.4
 import networkx as nx
 import matplotlib.pyplot as plt
 
