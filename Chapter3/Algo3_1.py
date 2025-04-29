@@ -129,7 +129,7 @@ def perform_load_flow(PD,M,kron_array, param, lambda_value,power_values):
 count = 0
 converged = False
 # Example usage
-file_path = 'power.txt'
+file_path = 'power_kron.txt'
 M, kron_array, param  = read_power_file(file_path)
 PD = 150
 R=param[2]
