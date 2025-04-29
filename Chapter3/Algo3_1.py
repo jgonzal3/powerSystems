@@ -142,10 +142,10 @@ converged = False
 
 #Pd = 180
 # Example usage
-file_path = 'power4.txt'
+file_path = 'power5.txt'
 M, kron_array, param  = read_power_file(file_path)
 PD = 160
-#PD = 150
+PD = 150
 R=param[2]
 
 
