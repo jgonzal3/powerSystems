@@ -4,6 +4,7 @@ import math
 
 from YBUS_singular_transformation import get_admitance
 
+
 def read_power_file(file_path):
     """
     Reads a power system file with the specified format.
@@ -86,8 +87,8 @@ def estimate_power(lambda_p):
     NG = cost_function.shape[0]  # Number of generators
     power = np.array([(lambda_p - M[i][1])/(2 * M[i][0]) for i in range(NG)])
 
-    if len(power) < target_length:
-        power = np.concatenate((power, [0] * (target_length - len(power))))
+    if len(power) < NB:
+        power = np.concatenate((power, [0] * (NB - len(power))))
 
     return power
 
@@ -129,7 +130,7 @@ def build_matrix(Q, V, NB, delta, matrix_type):
 
 def calculate_A_B_coefficients(X,V,delta):
     """
-    Calculate the B coefficients for the optimisation problem.
+    Calculate the B coefficients for the optimization problem.
 
     Parameters:
         B_matrix (numpy.ndarray): Matrix of size NG x NG.
@@ -146,39 +147,39 @@ def calculate_A_B_coefficients(X,V,delta):
     b_coefficients = np.array(b_ij).reshape(NB, NB)
     return a_coefficients, b_coefficients
 
-def calculate_H(a_ij, b_ij, lambda_value, cost_function, P, Q):
+def calculate_H_77(a_ij, b_ij, lambda_p, P_injected, Q_injected):
 
     H = np.zeros((2*NG+1,2*NG+1))
-    lambda_value = float(lambda_value.item())
+    lambda_p = float(lambda_p.item())
 
     for i in range(NG):
         for j in range(NG):
             if i == j:
-                H[i,i] = 2*cost_function[i][0] + 2*lambda_value*a_ij[i,i]
+                H[i,i] = 2*cost_function[i][0] + 2*lambda_p*a_ij[i,i]
             else:
-                H[i,j] =  lambda_value*(a_ij[i,j] + a_ij[j,i])
+                H[i,j] =  lambda_p*(a_ij[i,j] + a_ij[j,i])
     # line three
     for i in range(3):
         for k in range(NG,2*NG):
             j = k-NG
-            H[i,k] = lambda_value*(b_ij[j,i] - b_ij[i,j])
+            H[i,k] = lambda_p*(b_ij[j,i] - b_ij[i,j])
 
     for i in range(NG):
-        H[i,2*NG] = sum((a_ij[i,j] + a_ij[j,i])*P[j] + (b_ij[j,i] - b_ij[i,j])*Q[j] for j in range (NB))-1
+        H[i,2*NG] = sum((a_ij[i,j] + a_ij[j,i])*P_injected[j] + (b_ij[j,i] - b_ij[i,j])*Q_injected[j] for j in range (NB))-1
 
     for j in range(NG):
         for k in range(NG,2*NG):
             i = k-NG
-            H[k,j] = lambda_value*(b_ij[i,j] - b_ij[j,i])
+            H[k,j] = lambda_p*(b_ij[i,j] - b_ij[j,i])
 
     for k in range(NG,2*NG):
         for l in range(NG,2*NG):
             i = k-NG
             j = l-NG
-            H[k,l] = lambda_value*(a_ij[i,j] + a_ij[j,i])
+            H[k,l] = lambda_p*(a_ij[i,j] + a_ij[j,i])
 
     for i in range(NG):
-        H[i+NG,2*NG] = sum(((a_ij[i,j] + a_ij[j,i])*Q[j] + (b_ij[i,j] - b_ij[j,i])*P[j]) for j in range(NB))
+        H[i+NG,2*NG] = sum(((a_ij[i,j] + a_ij[j,i])*Q_injected[j] + (b_ij[i,j] - b_ij[j,i])*P_injected[j]) for j in range(NB))
 
     for i in range(NG,2*NG):
         H[2*NG,i] = H[i,2*NG]
@@ -188,22 +189,22 @@ def calculate_H(a_ij, b_ij, lambda_value, cost_function, P, Q):
 
     return H
 
-def power_flow_estimation(a_ij, b_ij, lambda_value, P_injected, Q_injected, P_generated, Q_generated):
+def power_flow_estimation(a_ij, b_ij, lambda_p, P_injected, Q_injected, P_generated, Q_generated):
     """
     Function to estimate power flow.
     """
     # Placeholder for the actual implementation
 
-    PL, B_jacobian = build_jacobian_matrix(a_ij, b_ij, P_injected, Q_injected, P_generated, real_power_demand, lambda_value)
+    PL, B_jacobian = build_jacobian_matrix_7(a_ij, b_ij, P_injected, Q_injected, P_generated, lambda_p)
 
-    B_hessian = calculate_H(a_ij, b_ij, lambda_value, cost_function, P_injected, Q_injected)
+    B_hessian = calculate_H_77(a_ij, b_ij, lambda_p, P_injected, Q_injected)
     S = np.linalg.solve(B_hessian, -B_jacobian)
 
     # Update my_power and my_lambda
     #[expression_if_true if condition else expression_if_false for item in iterable]
     P_generated = [P_generated[i] + S[i] for i in range(NG)]
     Q_generated = [Q_generated[i] + S[i+NG] for i in range(NG)]
-    lambda_value += S[2*NG]
+    lambda_p += S[2*NG]
     squared_sum = np.sqrt(np.sum(np.square(B_jacobian)))
 
     P_generated = np.append(P_generated,[0,0])
@@ -214,12 +215,12 @@ def power_flow_estimation(a_ij, b_ij, lambda_value, P_injected, Q_injected, P_ge
     #Calculate the new power generation
     tol=0.0000001
     if squared_sum < tol:
-         return lambda_value, P_generated, Q_generated, P_injected,Q_injected, True
+         return lambda_p, P_generated, Q_generated, P_injected,Q_injected, True
     else:
-        return lambda_value, P_generated, Q_generated, P_injected,Q_injected, False
+        return lambda_p, P_generated, Q_generated, P_injected,Q_injected, False
 
 # Example usage of read_power_file
-def build_jacobian_matrix(a_ij, b_ij, P_injected, Q_injected, P_generated, real_power_demand, lambda_p):
+def build_jacobian_matrix_7(a_ij, b_ij, P_injected, Q_injected, P_generated, lambda_p):
     """
     Creates the Jacobian matrix for the optimization problem.
 
@@ -241,17 +242,17 @@ def build_jacobian_matrix(a_ij, b_ij, P_injected, Q_injected, P_generated, real_
     pg = -1*np.ones(2*NG+1)
 
     #  Estimation of the line loss PL
-    # Use NumPy's vectorised operations for efficiency
+    # Use NumPy's vectorized operations for efficiency
     PL = np.sum(a_ij * (np.outer(P_injected, P_injected) + np.outer(Q_injected, Q_injected)) + b_ij * (np.outer(Q_injected, P_injected) - np.outer(P_injected, Q_injected)))
 
     # Partial of lagrangian with respect to lambda
     pg[2*NG] = -float(sum(P_generated)) + float(sum(real_power_demand)) + float(PL.item())
 
-    # Partial of Lagrangian with respect to Pg
+    # Partial of lagrangian with respect to Pg
     for i in range(NG):
         pg[i] = 2 * cost_function[i][0] * P_generated[i] + cost_function[i][1] + lambda_p * (sum((a_ij[i,j] + a_ij[j,i])* P_injected[j] + (b_ij[j,i] - b_ij[i,j]) * Q_injected[j] for j in range(NB)) - 1)
 
-    # Partial of Lagrangian with respect to Qg
+    # Partial of lagrangian with respect to Qg
     for i in range(NG):
         k = i+NG
         pg[k] = lambda_p * (sum((a_ij[i, j] + a_ij[j, i]) * Q_injected[j] + (b_ij[i,j] - b_ij[j,i]) * P_injected[j] for j in range(NB)))
@@ -267,14 +268,14 @@ def perform_load_flow(G, B, delta, V, P_injected, Q_injected):
     Parameters:
         G (numpy.ndarray): Conductance matrix.
         B (numpy.ndarray): Susceptance matrix.
-        delta (numpy.ndarray): Voltage angle differences.
+        deltaN (numpy.ndarray): Voltage angle differences.
         VN (numpy.ndarray): Voltage magnitudes.
         PiS (list): Specified active power.
         QiS (list): Specified reactive power.
         tol (float): Tolerance for convergence.
 
     Returns:
-        tuple: Updated delta, VN, and convergence status.
+        tuple: Updated deltaN, VN, and convergence status.
     """
 
     P_injected = P_injected[1:]
@@ -299,6 +300,7 @@ def perform_load_flow(G, B, delta, V, P_injected, Q_injected):
         L_matrix = build_matrix(Qi, V, NB, delta, "L")
         # Step 13
         V[1:] = V[1:] + np.linalg.inv(L_matrix) @ delta_Qi
+        # Step 14
 
     P_injected = np.insert(P_injected, 0, 0)
     Q_injected = np.insert(Q_injected, 0, 0)
@@ -355,8 +357,9 @@ F = compute_cost(P_generated)
 P_injected = P_generated - real_power_demand
 
 # Iterative load flow calculation
-count_I = 0
+
 count_II = 0
+count_I = 0
 count_III = 0
 converged_I = False
 converged_II = False
@@ -367,13 +370,13 @@ while not converged_II and count_II < R:
     Q_injected = Q_generated - reactive_power_demand
     while not converged_I and count_I < R:
         print(f"Iteration_I {count_I}:,lambda_value {lambda_p}, Power {np.round([float(x) for x in P_injected],6)}")
-        delta, V, P_injected, Q_injected, converged = perform_load_flow(G, B, delta, V, P_injected, Q_injected)
+        delta, V, P_injected, Q_injected, converged_I = perform_load_flow(G, B, delta, V, P_injected, Q_injected)
         P_injected[0] = V[0] * sum(V[k] * (G[0][k] * math.cos(delta[0] - delta[k]) + B[0][k] * math.sin(delta[0] - delta[k])) for k in range(NB))
         Q_injected[0] = V[0] * sum(V[k] * (G[0][k] * math.sin(delta[0] - delta[k]) - B[0][k] * math.cos(delta[0] - delta[k])) for k in range(NB))
         count_I += 1
     count_I = 0.0
     converged_I = False
-    if (abs(P_generated[0] - real_power_demand[0] - P_injected[0])) > tol:
+    if (abs(P_generated[0] - real_power_demand[0] - P_injected[0])) > 0.00001:
         P_generated[0] = P_injected[0] + real_power_demand[0]
         Q_generated = Q_injected + reactive_power_demand
         a_ij, b_ij = calculate_A_B_coefficients(X, V, delta)
@@ -386,7 +389,7 @@ while not converged_II and count_II < R:
         print(f"Iteration last:,lambda_value {lambda_p}, Power {np.round([float(x) for x in P_injected],6)}")
     #print(Q_generated - reactive_power_demand)
     F_new = compute_cost(P_generated)
-    if abs(F - F_new) < tol:
+    if abs(F - F_new) < 0.0001:
         break
     else:
         F = F_new
@@ -403,5 +406,4 @@ data3 = {
 }
 
 table3 = pd.DataFrame(data3)
-print(table3)
-print(f"Lambda: {lambda_p}, Final cost: {F}")
+print(table3, lambda_p, F)
