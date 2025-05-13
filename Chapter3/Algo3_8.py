@@ -4,7 +4,6 @@ import math
 
 from YBUS_singular_transformation import get_admitance
 
-
 def read_power_file(file_path):
     """
     Reads a power system file with the specified format.
@@ -123,7 +122,7 @@ def perform_load_flow(G, B, delta, V, P_injected, Q_injected):
         tol (float): Tolerance for convergence.
 
     Returns:
-        tuple: Updated deltaN, VN, and convergence status.
+        tuple: Updated delta, V, and convergence status.
     """
 
     P_injected = P_injected[1:]
@@ -158,8 +157,6 @@ def perform_load_flow(G, B, delta, V, P_injected, Q_injected):
         V[k] * (G[0][k] * math.sin(delta[0] - delta[k]) - B[0][k] * math.cos(delta[0] - delta[k])) for k in range(NB))
 
     max_p = max(abs(num) for num in delta_Pi + delta_Qi)
-    print(max_p)
-
     # Check for convergence
     if max_p < 0.00001:
         return delta, V, P_injected, Q_injected, True
@@ -222,7 +219,7 @@ def build_hessian_matrix(b_ij, lambda_p, P_generated):
 
 def build_jacobian_matrix(B_matrix, P_injected, P_generated, lambda_p):
     """
-    Creates the Jacobian matrix for the optimization problem.
+    Creates the Jacobian matrix for the optimisation problem.
 
     Parameters:
         B_matrix (numpy.ndarray): Matrix of size NB x NB.
@@ -240,14 +237,14 @@ def build_jacobian_matrix(B_matrix, P_injected, P_generated, lambda_p):
     # Calculate PL
     PL = sum(B_matrix[i,j] * P_injected[i] * P_injected[j] for i in range(NB) for j in range(NB))
 
-    # Initialize pg array
+    # Initialise pg array
     pg = np.zeros(NG + 1)
     for i in range(NG):
         pg[i] = (2 * cost_function[i][0] * P_generated[i] + cost_function[i][1] +
                  float(lambda_p.item() * (sum(2 * B_matrix[i,j] * P_injected[j] for j in range(NB)) - 1)))
 
     # Notice that the different types of power used to calculate PL and pg
-    # With PL, I used the power calculated, P. But to estimate the jacobian of lambda, I used
+    # With PL, I used the power calculated, P. But to estimate the Jacobian of lambda, I used
     # both powers, specifically to estimate the generator losses. I cannot use the estimated.
     # Add the last element to pg
     pg[NG] = -float(sum(P_generated)) + float(sum(real_power_demand) ) + float(PL.item())
@@ -259,7 +256,7 @@ def build_jacobian_matrix(B_matrix, P_injected, P_generated, lambda_p):
 
 def calculate_B_coefficients(X,V,phi,theta):
     """
-    Calculate the B coefficients for the optimization problem.
+    Calculate the B coefficients for the optimisation problem.
 
     Parameters:
         B_matrix (numpy.ndarray): Matrix of size NG x NG.
@@ -379,7 +376,7 @@ while not converged_II and count_II < R:
     #print(Q_generated - reactive_power_demand)
     F_new = compute_cost(P_generated)
     if abs(F - F_new) < 0.0001:
-        break
+        converged_II = True
     else:
         F = F_new
     count_II += 1
