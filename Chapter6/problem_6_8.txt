@@ -1,0 +1,25 @@
+# NG: number of Generators
+# NB: number of Buses
+# NQ: number of PQ Buses
+# NV: number of PV buses
+# NG, NB, NE, NQ, NV, R, tol, deltaV_max
+3,4,5,3,0,10,0.001, 0.01
+# V and delta for slack bus
+1.04,0.0
+# Active for all buses
+0.0,0.5,-1.0,0.3
+# Reactive power for PQ buses
+0.0,-0.2,0.5,-0.1
+# Voltage for the PV bus. This is the voltage for the bus with generator. If there is a PV bus
+# this value must exist and be specified.
+#1.04
+# Maximum voltage for each bus. Fist bus is slack bus
+1.04,3.9,3.9,3.9
+# Minimum voltage for each bus. Fist bus is slack bus
+1.04,0.01,0.01,0.01
+# Type
+SL,PQ,PQ,PQ
+# Cost function for Generator NG
+50,351,44.4
+50,389,40.6
+60,340,40.0
