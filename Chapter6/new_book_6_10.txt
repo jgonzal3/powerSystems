@@ -1,0 +1,17 @@
+#number of edges,number of nodes
+3,3
+# id of nodes
+1,2,3
+# Edges
+1,2
+1,3
+2,3
+# Shunt admittance for each bus
+0.02j,0.02j,0.02j
+# Admittance matrix
+# id of edge,from-to,serial admitance, conductance+reactance (impidence)
+1,1-2,0.0j,0.02+0.08j
+2,1-3,0.0j,0.02+0.08j
+3,2-3,0.0j,0.02+0.08j
+
+
