@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import utils as u
 
 from YBUS_singlular_transformation_skip_comments import get_admitance
 
@@ -314,12 +313,12 @@ def display_final_results(v_next, delta_next, p_current_calculated, q_current_ca
     print(log_df.to_string(index=False))
 
 
-A, Y = get_admitance("new_book_6_9.txt")
+A, Y = get_admitance("new_book_6_11.txt")
 B = np.imag(Y)
 G = np.real(Y)
 Y_polar = admitance_rect_to_polar(Y)
 #print_admitance_matrix_polar(Y_polar)
-data = read_power_system_file("problem_6_9.txt")
+data = read_power_system_file("problem_6_11.txt")
 NB = data["NB"]
 NQ = data["NQ"]
 NV = data["NV"]
