@@ -311,7 +311,20 @@ def calculate_Q_at_PV(q_current_calculated, pv_indices, delta_next, v_next, Y_po
         q_current_calculated[i] = -Qi
         Qi = 0.0
     return q_current_calculated
-
+    
+def inject_power_to_slack(p_current_calculated, q_current_calculated, Y_polar, v_current, delta_current):
+    """
+    Injects the calculated power into the slack bus.
+    """
+    p_current_calculated[0] = 0.0
+    q_current_calculated[0] = 0.0
+    
+    for k in range(NB):
+        delta_k = delta_current[k]
+        theta_i_k = np.deg2rad(Y_polar[0, k][1])
+        p_current_calculated[0]  += np.abs(v_current[0]) * np.abs(v_current[k]) * Y_polar[0, k][0] * np.cos(theta_i_k + delta_k)
+        q_current_calculated[0]  -= np.abs(v_current[0]) * np.abs(v_current[k]) * Y_polar[0, k][0] * np.sin(theta_i_k + delta_k)
+    
 def log_iteration(log_df, iteration, p_calc, q_calc, v, delta, error):
     """
     Log the results of each iteration into a pandas DataFrame.
@@ -426,4 +439,6 @@ while (r < data["R"] and error > data["tol"]):
     r = r+1
 
 print("Done with iterations")
+inject_power_to_slack(p_current_calculated, q_current_calculated, Y_polar, v_current, delta_current)
+
 display_final_results(v_next, delta_next, p_current_calculated, q_current_calculated, log_df)
