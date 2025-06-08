@@ -324,6 +324,23 @@ def inject_power_to_slack(p_current_calculated, q_current_calculated, Y_polar, v
         theta_i_k = np.deg2rad(Y_polar[0, k][1])
         p_current_calculated[0]  += np.abs(v_current[0]) * np.abs(v_current[k]) * Y_polar[0, k][0] * np.cos(theta_i_k + delta_k)
         q_current_calculated[0]  -= np.abs(v_current[0]) * np.abs(v_current[k]) * Y_polar[0, k][0] * np.sin(theta_i_k + delta_k)
+
+def estimate_line_flows(Y, v_next, delta_next):
+    """
+    Estimate the complex power flow S_ij for each line (i, j).
+    Returns a matrix S_flows[i, j] = S_ij (complex power from i to j).
+    """
+    NB = Y.shape[0]
+    S_flows = np.zeros((NB, NB), dtype=complex)
+    # Build voltage vector in polar form
+    V = np.array([np.abs(v_next[i]) * np.exp(1j * delta_next[i]) for i in range(NB)])
+    for i in range(NB):
+        for j in range(NB):
+            if i != j and Y[i, j] != 0:
+                I_ij = (V[i] - V[j]) * Y[i, j]
+                S_flows[i, j] = V[i] * np.conj(I_ij)
+    return S_flows
+
     
 def log_iteration(log_df, iteration, p_calc, q_calc, v, delta, error):
     """
@@ -442,3 +459,10 @@ print("Done with iterations")
 inject_power_to_slack(p_current_calculated, q_current_calculated, Y_polar, v_current, delta_current)
 
 display_final_results(v_next, delta_next, p_current_calculated, q_current_calculated, log_df)
+
+S_flows = estimate_line_flows(Y, v_next, delta_next)
+print("\nLine Flow Matrix (P + jQ) from bus i to bus j:")
+for i in range(S_flows.shape[0]):
+    for j in range(S_flows.shape[1]):
+        if i != j and Y[i, j] != 0:
+            print(f"S_{i + 1}->{j + 1}: {S_flows[i, j].real:.4f} + j{S_flows[i, j].imag:.4f} p.u.")
