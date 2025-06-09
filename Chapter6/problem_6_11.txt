@@ -7,7 +7,9 @@
 # Node IDs
 1,2,3
 # V and delta for slack bus
-1.04,0.0
+1.04
+# V for the PQ buses
+1.0
 # Demand Active for all buses
 2.0,0.0,1.5
 # Demand Reactive power for PQ buses
@@ -16,7 +18,7 @@
 0.0,0.5,0.0
 # Generated reactive power for each bus
 0.0,1.0,0.0
-# Voltage for the PV bus. This is the voltage for the bus with generator. If there is a PV bus
+# Voltage for the PV buses. This is the voltage for the bus with generator. If there is a PV bus
 # this value must exist and be specified.
 1.04
 # Maximum voltage for each bus. Fist bus is slack bus
