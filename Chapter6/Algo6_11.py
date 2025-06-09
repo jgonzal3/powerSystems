@@ -49,7 +49,11 @@ def read_power_system_file(filepath):
     idx += 1
 
     # V and delta for slack bus
-    V_slack, delta_slack = [float(x) for x in lines[idx].split(',')]
+    V_slack = [float(x) for x in lines[idx].split(',')]
+    idx += 1
+
+    # Real bus power for PQ and PV buses
+    V_PQ = [float(x) for x in lines[idx].split(',')]
     idx += 1
 
     # Real bus power for PQ and PV buses
@@ -130,10 +134,10 @@ def read_power_system_file(filepath):
         'NV': NV,
         'R': R,
         'tol': tol,
-        'v_slack': V_slack,
-        'angle_slack': delta_slack,
+        'v_magnitude_slack': V_slack,
         'demand_real_bus_power_PQ_PV': Pid_Qid,
         'demand_reactive_bus_power_PQ': Q_PQ,
+        'v_magnitudes_PQ': V_PQ,
         'v_magnitudes_PV': voltage_limits_PV,
         'v_magnitude_max_limits_PQ': max_voltage_buses,
         'v_magnitude_min_limits_PQ': min_voltage_buses,
@@ -329,8 +333,11 @@ q_demand = data["demand_reactive_bus_power_PQ"]
 p_generated = data["p_generated"]
 q_generated = data["q_generated"]
 
+c = np.array(data['v_magnitude_slack'], dtype=complex)
+a = np.array(data["v_magnitudes_PQ"], dtype=complex)
+b = np.array(data["v_magnitudes_PV"], dtype=complex)
 
-v_current = np.array([1.04+1j*0.0, 1.0+1j*0.0, 1.04+1j*0.0], dtype=complex)
+v_current = np.concatenate((c, a, b))
 v_next = v_current.copy()
 delta_current = np.array([0.00]*len(v_current), dtype=float)
 delta_next = delta_current.copy()
